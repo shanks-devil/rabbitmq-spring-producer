@@ -12,7 +12,6 @@ public class SendMessage {
 	@Autowired
 	private AmqpTemplate rabbitTemplate;
 	
-	
 	public void send(MessageModel messageModel) {
 		rabbitTemplate.convertAndSend(messageModel);
 	}
