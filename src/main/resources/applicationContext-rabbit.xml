@@ -1,8 +1,9 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:rabbit="http://www.springframework.org/schema/rabbit"
 	xmlns:context="http://www.springframework.org/schema/context"
 	xsi:schemaLocation="http://www.springframework.org/schema/rabbit
-           	http://www.springframework.org/schema/rabbit/spring-rabbit.xsd
+           	http://www.springframework.org/schema/rabbit/spring-rabbit-1.5.xsd
           	http://www.springframework.org/schema/beans
            	http://www.springframework.org/schema/beans/spring-beans.xsd
            	http://www.springframework.org/schema/context
@@ -19,6 +20,17 @@
 		host="${host}" port="${port}" username="${username}" password="${password}"
 		channel-cache-size="${poolsize}" />
 	
+
+	<!-- declare queue and exchange -->
+	<rabbit:queue name="${queuename}" />
+
+	<rabbit:direct-exchange name="${exchange}">
+		<rabbit:bindings>
+			<rabbit:binding key="${routing.key}" queue="${queuename}" >
+			</rabbit:binding>
+		</rabbit:bindings>
+	</rabbit:direct-exchange>
+	<!-- end declare queue and exchange -->
 
 	<rabbit:admin id="rabbitAdmin" connection-factory="rabbitConnectionFactory"
 		auto-startup="true" />
