@@ -14,36 +14,46 @@
 	<context:property-placeholder location="classpath:*.properties" />
 	<!-- base configuration end -->
 
-	<!-- rabbit configuration -->
-	<rabbit:connection-factory id="rabbitConnectionFactory"
-		host="${host}" port="${port}" username="${username}" password="${password}"
-		channel-cache-size="${poolsize}" />
+	<!-- rabbit connection -->
+	<rabbit:connection-factory id="cachingConnectionFactory"
+		channel-cache-size="${rabbit.poolsize}" addresses="${rabbit.addresses}"
+		username="${rabbit.username}" password="${rabbit.password}" />
 
+	<rabbit:template id="rabbitTemplate" retry-template="retryTemplate"
+		connection-factory="cachingConnectionFactory"></rabbit:template>
 
-	<!-- declare queue and exchange -->
-	<rabbit:queue name="${queuename}" />
+	<bean id="retryTemplate" class="org.springframework.retry.support.RetryTemplate">
+		<property name="backOffPolicy">
+			<bean class="org.springframework.retry.backoff.ExponentialBackOffPolicy">
+				<property name="initialInterval" value="500" />
+				<property name="multiplier" value="10.0" />
+				<property name="maxInterval" value="10000" />
+			</bean>
+		</property>
+	</bean>
 
-	<rabbit:direct-exchange name="${exchange}">
-		<!-- <rabbit:bindings> <rabbit:binding key="${routing.key}" queue="${queuename}" 
-			> </rabbit:binding> </rabbit:bindings> -->
+	<!-- rabbit admin -->
+	<rabbit:admin auto-startup="true" connection-factory="cachingConnectionFactory" />
+
+	<!-- rabbit declare queues -->
+	<rabbit:queue name="${basketball.queue}"></rabbit:queue>
+	<rabbit:queue name="${football.queue}"></rabbit:queue>
+	<rabbit:queue name="${sport.queue}"></rabbit:queue>
+	<rabbit:queue name="${mail.queue}"></rabbit:queue>
+
+	<!-- rabbit declare exchange -->
+	<rabbit:direct-exchange name="">
+		<rabbit:bindings>
+			<rabbit:binding key="${mail.routingKey}" queue="${mail.queue}"></rabbit:binding>
+		</rabbit:bindings>
 	</rabbit:direct-exchange>
-	<!-- end declare queue and exchange -->
 
-	<rabbit:admin id="rabbitAdmin" connection-factory="rabbitConnectionFactory"
-		auto-startup="true" />
-
-	<rabbit:template id="rabbitTemplate"
-		connection-factory="rabbitConnectionFactory" routing-key="${routing.key}">
-	</rabbit:template>
-	<!-- rabbit configuration end -->
-
-	<!-- <bean id="rabbitConnectionFactory" class="com.rabbitmq.client.ConnectionFactory"> 
-		<property name="username" value="${username}"></property> <property name="password" 
-		value="${password}"></property> <property name="host" value="${host}"></property> 
-		<property name="port" value="${post}"></property> </bean> <bean id="connectionFactory" 
-		class="org.springframework.amqp.rabbit.connection.CachingConnectionFactory"> 
-		<constructor-arg ref="rabbitConnectionFactory" ></constructor-arg> </bean> 
-		<bean id="rabbitTemplate" class="org.springframework.amqp.rabbit.core.RabbitTemplate"> 
-		<property name="routingKey" value="rabbit-spring-queue"></property> <property 
-		name="connectionFactory" ref="connectionFactory"></property> </bean> -->
+	<rabbit:topic-exchange name="${sport.exchange}">
+		<rabbit:bindings>
+			<rabbit:binding pattern="${sport.routingkey}"  queue="${sport.queue}"></rabbit:binding>
+			<rabbit:binding pattern="${football.routingkey}" queue="${football.queue}"></rabbit:binding>
+			<rabbit:binding pattern="${basketball.routingkey}" queue="${basketball.queue}"></rabbit:binding>
+		</rabbit:bindings>
+	</rabbit:topic-exchange>
+	
 </beans>
